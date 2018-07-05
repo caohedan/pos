@@ -113,13 +113,11 @@ function discountCash(detailArray){
 }
 
 function Print(detailArray,total,discount){
-  let receipt = '***<没钱赚商店>收据***\n';
+  let receipt = '***<没钱赚商店>收据***';
   for(let detail of detailArray){
 
-    receipt += '名称：' + detail.name + '，数量：' + detail.amount + detail.unit + '，单价：' + detail.price.toFixed(2) +
-    '(元)，小计：' + detail.realSum.toFixed(2) + '(元)\n';
+    receipt += `\n名称：${detail.name}，数量：${detail.amount}${detail.unit}，单价：${detail.price.toFixed(2)}(元)，小计：${detail.realSum.toFixed(2)}(元)`;
   }
-  receipt+='----------------------\n总计：'+total.toFixed(2)+'(元)\n节省：'+discount.toFixed(2)+'(元)\n**********************';
+  receipt+=`\n----------------------\n总计：${total.toFixed(2)}(元)\n节省：${discount.toFixed(2)}(元)\n**********************`;
   console.log(receipt);
-  
   }
