@@ -1,18 +1,20 @@
 'use strict';
 
 function printReceipt(inputs) {
-  var countArray = infoCount(inputs);
-  var discountArray = countAfterDiscount(countArray,loadPromotions);
-  var detailArray = afterDetailArray(discountArray,loadAllItems);
-  var total = countAll(detailArray);
-  var discount = discountCash(detailArray);
+  let countArray = infoCount(inputs);
+  let discountArray = countAfterDiscount(countArray,loadPromotions);
+  let detailArray = afterDetailArray(discountArray,loadAllItems);
+  let total = countAll(detailArray);
+  let discount = discountCash(detailArray);
   Print(detailArray,total,discount);
+  console.log(inputs);
+
 }
 
-//计数
+//count
 function infoCount(collection) {
-    var mark = new Set();
-    var result = [];
+    let mark = new Set();
+    let result = [];
     for(let i = 0; i < collection.length; i++){
           collection[i] = collection[i].split('-');
     }
@@ -20,11 +22,11 @@ function infoCount(collection) {
 //    console.log(collection.length+'\n');
     for(let i = 0; i < collection.length; i++)
     {
-    var match = collection[i][0];
+      var match = collection[i][0];
       if (mark.has(match)) continue;
       var num = 0;
-       for (let j = 0; j < collection.length; j++) {
-       if(match === collection[j][0])
+      for (let j = 0; j < collection.length; j++) {
+        if(match === collection[j][0])
        {
             if(collection[j][1])
             num += parseFloat(collection[j][1]);
@@ -42,12 +44,12 @@ function infoCount(collection) {
 
     return result;
  }
-//优惠
+//discount
  function countAfterDiscount(countArray,loadAllItems){
 //  console.log(countArray+'\n');
-  var allPromotions = loadPromotions();
-  var barcode;
-  var discountArray = [];
+  let allPromotions = loadPromotions();
+  let barcode;
+  let discountArray = [];
   for (let promotion of allPromotions)
   {
        if(promotion.type === 'BUY_TWO_GET_ONE_FREE')
@@ -65,7 +67,7 @@ function infoCount(collection) {
 // console.log(discountArray);
     return discountArray;
  }
-//详细信息
+//detail information
 function afterDetailArray(discountArray,loadAllItems){
     var allItems = loadAllItems();
     var detailArray = [];
@@ -89,6 +91,7 @@ function afterDetailArray(discountArray,loadAllItems){
 //    console.log('\n');
 //   console.log(detailArray);
 }
+//total
 function countAll(detailArray){
       var total = 0;
      for(let detail of detailArray){
@@ -97,6 +100,7 @@ function countAll(detailArray){
 //     console.log("######总和"+total);
      return total;
 }
+//savings
 function discountCash(detailArray){
     var total = 0;
     for(let detail of detailArray){
@@ -107,11 +111,11 @@ function discountCash(detailArray){
 }
 
 function Print(detailArray,total,discount){
-  let receipt = '***<没钱赚商店>收据***\n'
+  let receipt = '***<没钱赚商店>收据***\n';
   for(let detail of detailArray){
 
     receipt += '名称：' + detail.name + '，数量：' + detail.amount + detail.unit + '，单价：' + detail.price.toFixed(2) +
-    '(元)，小计：' + detail.realSum.toFixed(2) + '(元)\n'
+    '(元)，小计：' + detail.realSum.toFixed(2) + '(元)\n';
   }
   receipt+='----------------------\n总计：'+total.toFixed(2)+'(元)\n节省：'+discount.toFixed(2)+'(元)\n**********************';
   console.log(receipt);
