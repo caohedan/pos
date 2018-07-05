@@ -1,51 +1,59 @@
 'use strict';
 
-function printReceipt(inputs) {
-  let countArray = infoCount(inputs);
-  let discountArray = countAfterDiscount(countArray,loadPromotions);
-  let detailArray = afterDetailArray(discountArray,loadAllItems);
-  let total = countAll(detailArray);
-  let discount = discountCash(detailArray);
-  Print(detailArray,total,discount);
-//  console.log(inputs);
+  function printReceipt(inputs) {
+  let countItems = cartItemsCount(inputs);
+  let itemsAmountDiscount = amountAfterDiscount(countItems,loadPromotions);
+  let detailItems = afterDetailArray(itemsAmountDiscount,loadAllItems);
+  let total = countAll(detailItems);
+  let discount = discountCash(detailItems);
+  Print(detailItems,total,discount);
 
 }
 
-//count
-function infoCount(collection) {
-    let mark = new Set();
-    let result = [];
-    for(let i = 0; i < collection.length; i++){
-          collection[i] = collection[i].split('-');
-    }
-//    console.log(collection);
-//    console.log(collection.length+'\n');
-    for(let i = 0; i < collection.length; i++)
-    {
-      var match = collection[i][0];
-      if (mark.has(match)) continue;
-      var num = 0;
-      for (let j = 0; j < collection.length; j++) {
-        if(match === collection[j][0])
-       {
-            if(collection[j][1])
-            num += parseFloat(collection[j][1]);
-            else
-            num++;
-       }
-
-       }
-       result.push({
-                       barCode: match,
-                       count: num
-                  });
-           mark.add(match);
-    }
-
-    return result;
+//format the barCode
+  function formattedBarcodes(collection) {
+      let arrayTemp = new Array();
+      arrayTemp = collection.concat();
+      console.info(arrayTemp);
+      let cartItems = [];
+      for(let cartItem of arrayTemp)
+      {
+          let count = {barCode:cartItem,count:1};
+          if(cartItem.indexOf('-') === -1)
+           {
+               cartItems.push({barCode:cartItem,count:1});
+           }
+          else
+           {
+              cartItem = cartItem.split('-');
+              cartItems.push({barCode:cartItem[0],count:parseFloat(cartItem[1])});
+           }
+      }
+      return cartItems;
  }
-//discount
- function countAfterDiscount(countArray,loadAllItems){
+ //count the number of Items
+ function cartItemsCount(inputs){
+         let formatCartItems = formattedBarcodes(inputs);
+         console.info(JSON.stringify(formatCartItems));
+         let cartItems = [];
+         for(let formatCartItem of formatCartItems){
+         let existCartItem = null;
+         for(let cartItem of cartItems)
+         {
+              if(cartItem.barCode === formatCartItem.barCode)
+              existCartItem = cartItem;
+         }
+         if(existCartItem != null)
+              existCartItem.count += formatCartItem.count;
+         else
+              cartItems.push(formatCartItem);
+
+         }
+         console.info(JSON.stringify(cartItems));
+         return cartItems;
+ }
+//count the real payment of the amount of the items
+ function amountAfterDiscount(countArray,loadAllItems){
 //  console.log(countArray+'\n');
   let allPromotions = loadPromotions();
   let barcode;
@@ -63,8 +71,7 @@ function infoCount(collection) {
         discountArray.push({barcode:one.barCode,count:one.count,realPayCount:one.count});
 
  }
-// console.log("######优惠信息#####");
-// console.log(discountArray);
+
     return discountArray;
  }
 //detail information
@@ -81,15 +88,12 @@ function afterDetailArray(discountArray,loadAllItems){
                 amount:one.count,
                 unit:item.unit,
                 realSum:parseFloat(item.price)*parseFloat(one.realPayCount),
-                sum:parseFloat(item.price)*parseFloat(one.count)
+                subTotal:parseFloat(item.price)*parseFloat(one.count)
                 })
             }
           }
     }
     return detailArray;
-//    console.log("###########详细信息###########");
-//    console.log('\n');
-//   console.log(detailArray);
 }
 //total
 function countAll(detailArray){
@@ -97,16 +101,14 @@ function countAll(detailArray){
      for(let detail of detailArray){
         total += detail.realSum;
      }
-//     console.log("######总和"+total);
      return total;
 }
 //savings
 function discountCash(detailArray){
     var total = 0;
     for(let detail of detailArray){
-            total += (detail.sum-detail.realSum);
+            total += (detail.subTotal-detail.realSum);
          }
-//          console.log("######节约"+total);
               return total;
 }
 
@@ -119,4 +121,5 @@ function Print(detailArray,total,discount){
   }
   receipt+='----------------------\n总计：'+total.toFixed(2)+'(元)\n节省：'+discount.toFixed(2)+'(元)\n**********************';
   console.log(receipt);
+  
   }
