@@ -71,7 +71,7 @@
         discountArray.push({barcode:one.barCode,count:one.count,realPayCount:one.count});
 
  }
-
+    console.info(JSON.stringify(discountArray));
     return discountArray;
  }
 //detail information
@@ -93,6 +93,7 @@ function afterDetailArray(discountArray,loadAllItems){
             }
           }
     }
+    console.info(JSON.stringify(detailArray));
     return detailArray;
 }
 //total
