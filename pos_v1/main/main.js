@@ -7,7 +7,7 @@ function printReceipt(inputs) {
   let total = countAll(detailArray);
   let discount = discountCash(detailArray);
   Print(detailArray,total,discount);
-  console.log(inputs);
+//  console.log(inputs);
 
 }
 
