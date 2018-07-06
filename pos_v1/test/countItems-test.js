@@ -15,7 +15,7 @@ describe('count ', () => {
       'ITEM000005-2',
     ];
 
-  let itemsCount =JSON.stringify(cartItemsCount(tags));
+  let itemsCount =JSON.stringify(countCartItems(tags));
 
     const expectText = JSON.stringify([{"barCode":"ITEM000001","count":5},{"barCode":"ITEM000003","count":2.5},{"barCode":"ITEM000005","count":3}]);
     expect(itemsCount).toBe(expectText);
