@@ -1,4 +1,4 @@
-'use strict';
+const {loadPromotions, loadAllItems} = require('./fixtures');
 
 function printReceipt(inputs) {
   let countItems = countCartItems(inputs);
@@ -8,13 +8,6 @@ function printReceipt(inputs) {
   let discount = discountCash(detailItems);
   Print(detailItems, total, discount);
 
-
-  // const tags = [{"barcode": "ITEM000001", "count": 5, "realPayCount": 4},
-  //   {"barcode": "ITEM000003", "count": 2.5, "realPayCount": 2.5},
-  //   {"barcode": "ITEM000005", "count": 3, "realPayCount": 2}];
-  //
-  // let detailTest = JSON.stringify(countDetailArray(tags, loadAllItems));
-  // console.info(detailTest)
 }
 
 //format the barCode
@@ -63,8 +56,8 @@ function countCartItems(inputs) {
 
 //count the real payment of the amount of the items
 function amountAfterDiscount(countArray, loadPromotions) {
-//  console.log(countArray+'\n');
   let allPromotions = loadPromotions();
+  console.log(allPromotions);
   let barcode;
   let discountArray = [];
   for (let promotion of allPromotions) {
@@ -101,7 +94,6 @@ function countDetailArray(discountArray, loadAllItems) {
       }
     }
   }
-  console.info(JSON.stringify(detailArray));
   return detailArray;
 }
 
@@ -122,7 +114,6 @@ function discountCash(detailArray) {
   let total = 0;
   for (let detail of detailArray) {
     total += parseFloat(detail.subTotal) - parseFloat(detail.realSum);
-    console.info(total)
   }
   return total.toFixed(2);
 }
@@ -136,3 +127,5 @@ function Print(detailArray, total, discount) {
   receipt += `\n----------------------\n总计：${total}(元)\n节省：${discount}(元)\n**********************`;
   console.log(receipt);
 }
+
+module.exports = {printReceipt,countCartItems,amountAfterDiscount,countDetailArray,countAll,discountCash,Print};
