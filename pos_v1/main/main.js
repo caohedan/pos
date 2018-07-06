@@ -7,14 +7,6 @@ function printReceipt(inputs) {
   let total = countAll(detailItems);
   let discount = discountCash(detailItems);
   Print(detailItems, total, discount);
-
-
-  const tags = [{"barcode": "ITEM000001", "count": 5, "realPayCount": 4},
-    {"barcode": "ITEM000003", "count": 2.5, "realPayCount": 2.5},
-    {"barcode": "ITEM000005", "count": 3, "realPayCount": 2}];
-
-  let detailTest = JSON.stringify(countDetailArray(tags, loadAllItems));
-  console.info(detailTest)
 }
 
 //format the barCode
@@ -62,7 +54,7 @@ function countCartItems(inputs) {
 }
 
 //count the real payment of the amount of the items
-function amountAfterDiscount(countArray, loadAllItems) {
+function amountAfterDiscount(countArray, loadPromotions) {
 //  console.log(countArray+'\n');
   let allPromotions = loadPromotions();
   let barcode;
