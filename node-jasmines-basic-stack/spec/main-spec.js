@@ -1,7 +1,9 @@
 const main = require('../main/main');
-describe('pos', () => {
+const {loadPromotions,loadAllItems,buildCartItems} = require('../main/fixtures');
+'use strict';
+describe('pos integration test', () => {
 
-  it('should print text', () => {
+  it('should print right text', () => {
 
     const tags = [
       'ITEM000001',
@@ -28,5 +30,72 @@ describe('pos', () => {
 **********************`;
 
     expect(console.log).toHaveBeenCalledWith(expectText);
+  });
+});
+
+describe('pos unit test', () => {
+
+
+  it('should tags be transformed to {barcode, count(all)} format by function buildCartItems', () => {
+    //given
+    const tags = 
+    [ { barcode: 'ITEM000001', count: 1 },
+    { barcode: 'ITEM000001', count: 1 },
+    { barcode: 'ITEM000001', count: 1 },
+    { barcode: 'ITEM000001', count: 1 },
+    { barcode: 'ITEM000001', count: 1 },
+    { barcode: 'ITEM000003', count: 2.5 },
+    { barcode: 'ITEM000005', count: 1 },
+    { barcode: 'ITEM000005', count: 2 } ]
+
+
+    //when
+    const formattedBarcodes = main.buildCartItems(tags);
+
+    //then
+    const index_of_barcode_with_dash = 0;
+    expect(formattedBarcodes[index_of_barcode_with_dash].count).toBe(5);
+  });
+});
+describe('pos unit test', () => {
+
+
+  it('should tags be transformed to {barcode, count} format by function buildFormattedBarcodes', () => {
+    //given
+    const tags = [
+      'ITEM000001',
+      'ITEM000001',
+      'ITEM000001',
+      'ITEM000001',
+      'ITEM000001',
+      'ITEM000003-2.5',
+      'ITEM000005',
+      'ITEM000005-2',
+    ];
+
+
+    //when
+    const formattedBarcodes = main.buildFormattedBarcodes(tags);
+
+    //then
+    const index_of_barcode_with_dash = 5;
+    expect(formattedBarcodes[index_of_barcode_with_dash].count).toBe(2.5);
+  });
+});
+describe('pos unit test', () => {
+
+//given
+  const tags = [ { barcode: 'ITEM000001', count: 5 },
+  { barcode: 'ITEM000003', count: 2.5 },
+  { barcode: 'ITEM000005', count: 3 } ];
+
+  it('should count all discount Items information by function buildGifts', () => {
+   
+    //when
+    const gifts = main.buildGifts(loadAllItems(), loadPromotions(), tags);
+
+    //then
+    const index_of_gifts = 1;
+    expect(gifts[index_of_gifts].price).toBe(4.5);
   });
 });

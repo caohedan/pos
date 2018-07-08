@@ -1,131 +1,167 @@
 const {loadPromotions, loadAllItems} = require('./fixtures');
 
-function printReceipt(inputs) {
-  let countItems = countCartItems(inputs);
-  let itemsAmountDiscount = amountAfterDiscount(countItems, loadPromotions);
-  let detailItems = countDetailArray(itemsAmountDiscount, loadAllItems);
-  let total = countAll(detailItems);
-  let discount = discountCash(detailItems);
-  Print(detailItems, total, discount);
+'use strict';
 
+function buildFormattedBarcodes(tags){
+    let formattedBarcodes = [];
+    for (let tag of tags) {
+        let barcodeObject = {
+            barcode: tag,
+            count: 1
+        }
+        if (tag.indexOf("-") !== -1) {
+            let tempArray = tag.split("-");
+            barcodeObject = {
+                barcode: tempArray[0],
+                count: parseFloat(tempArray[1])
+            }
+        }
+        formattedBarcodes.push(barcodeObject);
+    }
+   
+    console.info(formattedBarcodes);
+    return formattedBarcodes;
 }
 
-//format the barCode
-function formatBarcodes(collection) {
-  let arrayTemp;
-  arrayTemp = collection.concat();
-  console.info(arrayTemp);
-  let cartItems = [];
-  for (let cartItem of arrayTemp) {
-    let count = {barCode: cartItem, count: 1};
-    if (cartItem.indexOf('-') === -1) {
-      cartItems.push({barCode: cartItem, count: 1});
-    }
-    else {
-      cartItem = cartItem.split('-');
-      cartItems.push({barCode: cartItem[0], count: parseFloat(cartItem[1])});
-    }
+function buildCartItems(formattedBarcodes){
+    let cartItems = [];
 
-  }
-  return cartItems;
+    for (let formattedBarcode of formattedBarcodes) {
+        let existCartItem = null;
+        for (let cartItem of cartItems) {
+            if (cartItem.barcode === formattedBarcode.barcode) {
+                existCartItem = cartItem;
+            }
+        }
+        if (existCartItem != null) {
+            existCartItem.count += formattedBarcode.count;
+        } else {
+            cartItems.push({ ...formattedBarcode });
+        }
+    }
+    console.info("buildCartItems");
+    console.info(cartItems);
+    return cartItems;
 }
-
-//count the number of Items
-function countCartItems(inputs) {
-  let formatCartItems = formatBarcodes(inputs);
-  console.info(JSON.stringify(formatCartItems));
-  let cartItems = [];
-  for (let formatCartItem of formatCartItems) {
-    let existCartItem = null;
+function buildGifts(allItems, promotions, cartItems){
+    let gifts = [];
     for (let cartItem of cartItems) {
-      if (cartItem.barCode === formatCartItem.barCode)
-        existCartItem = cartItem;
+        for (let promotion of promotions) {
+            if (promotion.type === 'BUY_TWO_GET_ONE_FREE') {
+                for (let promotBarcode of promotion.barcodes) {
+                    if (promotBarcode === cartItem.barcode) {
+                        let count = Math.floor(cartItem.count / 3);
+                        let gift = {
+                            barcode: cartItem.barcode,
+                            count: count
+                        }
+                        gifts.push(gift);
+                        break;
+                    }
+                }
+
+            }
+
+        }
     }
-    if (existCartItem != null) {
-      existCartItem.count += formatCartItem.count;
+
+    for (let gift of gifts) {
+        for (let product of allItems) {
+            if (gift.barcode === product.barcode) {
+                gift.price = product.price;
+            }
+        }
     }
-    else {
-      cartItems.push(formatCartItem);
+    console.info("gifts");
+    console.info(gifts);
+    return gifts;
+}
+
+function buildReceiptItems(allItems, cartItems){
+    let receiptItems = [];
+    for (let cartItem of cartItems) {
+        for (let product of allItems) {
+            if (product.barcode === cartItem.barcode) {
+                const { name, unit, price } = product;
+                receiptItems.push({
+                    barcode: cartItem.barcode,
+                    name,
+                    count: cartItem.count,
+                    unit,
+                    price
+                });
+            }
+        }
+    }
+    console.info(JSON.stringify(receiptItems));
+    return receiptItems;
+}
+
+function calculatePriceOfReceiptItems(receiptItems, gifts){
+    for (let receiptItem of receiptItems) {
+        let count = receiptItem.count;
+        for (let element of gifts) {
+            if (element.barcode === receiptItem.barcode) {
+                count = (receiptItem.count - element.count);
+            }
+        }
+        receiptItem.subTotal = count * receiptItem.price;
     }
 
-
-  }
-  console.info(JSON.stringify(cartItems));
-  return cartItems;
+    console.info(receiptItems);
 }
 
-//count the real payment of the amount of the items
-function amountAfterDiscount(countArray, loadPromotions) {
-  let allPromotions = loadPromotions();
-  console.log(allPromotions);
-  let barcode;
-  let discountArray = [];
-  for (let promotion of allPromotions) {
-    if (promotion.type === 'BUY_TWO_GET_ONE_FREE')
-      barcode = promotion.barcodes;
-  }
-  for (let one of countArray) {
-    if (barcode.indexOf(one.barCode))
-      discountArray.push({barcode: one.barCode, count: one.count, realPayCount: one.count - parseInt(one.count / 3)});
-    else
-      discountArray.push({barcode: one.barCode, count: one.count, realPayCount: one.count});
+function printReceipt(tags){
+    console.info(tags);
+    const allItems = loadAllItems();
+    const promotions = loadPromotions();
 
-  }
-  console.info(JSON.stringify(discountArray));
-  return discountArray;
-}
+    const formattedBarcodes = buildFormattedBarcodes(tags);
+    const cartItems = buildCartItems(formattedBarcodes);
+    const gifts = buildGifts(allItems, promotions, cartItems);
 
-//detail information
-function countDetailArray(discountArray, loadAllItems) {
-  let allItems = loadAllItems();
-  let detailArray = [];
-  for (let one of discountArray) {
-    for (let item of allItems) {
-      if (one.barcode === item.barcode) {
-        detailArray.push({
-          name: item.name,
-          price: item.price.toFixed(2),
-          amount: one.count,
-          unit: item.unit,
-          realSum: (parseFloat(item.price) * parseFloat(one.realPayCount)).toFixed(2),
-          subTotal: (parseFloat(item.price) * parseFloat(one.count)).toFixed(2)
+    const receiptItems = buildReceiptItems(allItems, cartItems);
+    calculatePriceOfReceiptItems(receiptItems, gifts);
 
-        })
-      }
+    let saved = 0;
+    for(let gift of gifts){
+        saved += (gift.count * gift.price);
     }
-  }
-  return detailArray;
+    console.info(saved);
+
+    let total = 0;
+    for (let receiptItem of receiptItems) {
+        total += receiptItem.subTotal;
+    }
+    console.info(total);
+
+    const viewModel = {
+        receiptItems,
+        total: total.toFixed(2),
+        saved: saved.toFixed(2)
+    }
+    console.info(viewModel);
+    
+    let receiptItemString = "";
+    for(const receiptItem of receiptItems){
+        receiptItemString += "\n";
+        receiptItemString += `名称：${receiptItem.name}，数量：${receiptItem.count}${receiptItem.unit}，单价：${receiptItem.price.toFixed(2)}(元)，小计：${receiptItem.subTotal.toFixed(2)}(元)`
+    }
+    
+    /*
+
+名称：雪碧，数量：5瓶，单价：3.00(元)，小计：12.00(元)
+名称：荔枝，数量：2.5斤，单价：15.00(元)，小计：37.50(元)
+名称：方便面，数量：3袋，单价：4.50(元)，小计：9.00(元)
+    */
+    const result = `***<没钱赚商店>收据***${receiptItemString}
+----------------------
+总计：${viewModel.total}(元)
+节省：${viewModel.saved}(元)
+**********************`
+
+    console.log(result);
 }
 
-//total
-function countAll(detailArray) {
-  let total = 0.00;
-  for (let detail of detailArray) {
 
-
-    total = parseFloat(total) + parseFloat(detail.realSum);
-    total = total.toFixed(2);
-  }
-  return total;
-}
-
-//savings
-function discountCash(detailArray) {
-  let total = 0;
-  for (let detail of detailArray) {
-    total += parseFloat(detail.subTotal) - parseFloat(detail.realSum);
-  }
-  return total.toFixed(2);
-}
-
-function Print(detailArray, total, discount) {
-  let receipt = '***<没钱赚商店>收据***';
-  for (let detail of detailArray) {
-
-    receipt += `\n名称：${detail.name}，数量：${detail.amount}${detail.unit}，单价：${detail.price}(元)，小计：${detail.realSum}(元)`;
-  }
-  receipt += `\n----------------------\n总计：${total}(元)\n节省：${discount}(元)\n**********************`;
-  console.log(receipt);
-}
-
-module.exports = {printReceipt,countCartItems,amountAfterDiscount,countDetailArray,countAll,discountCash,Print};
+module.exports = {printReceipt,buildFormattedBarcodes,buildGifts,buildCartItems};
